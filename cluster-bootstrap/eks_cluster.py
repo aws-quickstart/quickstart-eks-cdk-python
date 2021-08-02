@@ -129,7 +129,8 @@ class EKSClusterStack(core.Stack):
             # The default in CDK is to force upgrades through even if they violate - it is safer to not do that
             force_update=False,
             instance_types=[ec2.InstanceType(self.node.try_get_context("eks_node_instance_type"))],
-            release_version=self.node.try_get_context("eks_node_ami_version")
+            release_version=self.node.try_get_context("eks_node_ami_version"),
+            key_name=self.node.try_get_context("eks_ssh_key")
         )
         eks_node_group.role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
         
@@ -1271,7 +1272,8 @@ class EKSClusterStack(core.Stack):
                 vpc=eks_vpc,
                 vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
                 security_group=bastion_security_group,
-                block_devices=[ec2.BlockDevice(device_name="/dev/xvda", volume=ec2.BlockDeviceVolume.ebs(self.node.try_get_context("bastion_disk_size")))]
+                block_devices=[ec2.BlockDevice(device_name="/dev/xvda", volume=ec2.BlockDeviceVolume.ebs(self.node.try_get_context("bastion_disk_size")))],
+                key_name=self.node.try_get_context("eks_ssh_key")
             )
 
             # Set up our kubectl and fluxctl
