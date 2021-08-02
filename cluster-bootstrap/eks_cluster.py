@@ -121,18 +121,35 @@ class EKSClusterStack(core.Stack):
         )
 
         # Add a Managed Node Group
-        eks_node_group = eks_cluster.add_nodegroup_capacity(
-            "cluster-default-ng",
-            desired_size=self.node.try_get_context("eks_node_quantity"),
-            max_size=self.node.try_get_context("eks_node_max_quantity"),
-            disk_size=self.node.try_get_context("eks_node_disk_size"),
-            # The default in CDK is to force upgrades through even if they violate - it is safer to not do that
-            force_update=False,
-            instance_types=[ec2.InstanceType(self.node.try_get_context("eks_node_instance_type"))],
-            release_version=self.node.try_get_context("eks_node_ami_version"),
-            key_name=self.node.try_get_context("eks_ssh_key")
-        )
-        eks_node_group.role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
+        if bool(node_group_spot_type) == True:
+            print("This is going to create autoscaling group with capacityType of instance set to spot instances")
+            eks_node_group = eks_cluster.add_nodegroup_capacity(
+                "cluster-default-ng-spot",
+                desired_size=self.node.try_get_context("eks_node_spot_quantity"),
+                max_size=self.node.try_get_context("eks_node_spot_max_quantity"),
+                disk_size=self.node.try_get_context("eks_node_spot_disk_size"),
+                capacity_type=eks.CapacityType.SPOT,
+                # The default in CDK is to force upgrades through even if they violate - it is safer to not do that
+                force_update=False,
+                instance_types=[ec2.InstanceType(self.node.try_get_context("eks_node_spot_instance_type"))],
+                release_version=self.node.try_get_context("eks_node_spot_ami_version"),
+                key_name=self.node.try_get_context("eks_ssh_key")
+            )
+            eks_node_group.role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))                 
+        else:
+            print("This is going to create autoscaling group with capacityType of instance set to on-demand instances")
+            eks_node_group = eks_cluster.add_nodegroup_capacity(
+                "cluster-default-ng",
+                desired_size=self.node.try_get_context("eks_node_quantity"),
+                max_size=self.node.try_get_context("eks_node_max_quantity"),
+                disk_size=self.node.try_get_context("eks_node_disk_size"),
+                # The default in CDK is to force upgrades through even if they violate - it is safer to not do that
+                force_update=False,
+                instance_types=[ec2.InstanceType(self.node.try_get_context("eks_node_instance_type"))],
+                release_version=self.node.try_get_context("eks_node_ami_version"),
+                key_name=self.node.try_get_context("eks_ssh_key")
+            )
+            eks_node_group.role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))                 
         
         # AWS Load Balancer Controller
         if (self.node.try_get_context("deploy_aws_lb_controller") == "True"):
