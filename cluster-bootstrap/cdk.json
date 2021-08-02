@@ -11,6 +11,7 @@
         "vpc_cidr_mask_private": 24,
         "existing_vpc_name": "VPC",
         "eks_version": "1.21",
+        "eks_ssh_key": "eks-key",
         "eks_node_quantity": 3,
         "eks_node_max_quantity": 6,
         "eks_node_disk_size": 20,
